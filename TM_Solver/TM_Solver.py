@@ -1,38 +1,51 @@
 '''
-Transfer-Matrix-Solver Programm with Gui
-author: Paul Steinmann <p.steinmann@uni-bonn.de>
-Started : 10.01.2022
-Released: 28.01.2022
-Version: 1.0.1
+    Transfer-Matrix-Solver Programm with Gui
+    author: Paul Steinmann <p.steinmann@uni-bonn.de>
+    Started : 10.01.2022
+    Released: 28.01.2022
+    Version: 1.0
 
-    Version Added: 1.0.1
-        Changed Gui style to ttks 'clam'
-        Changed Style of the Progressbar
-        Fixed a Bug for Electric Field displayment of the Im Part got too big.
-    
-Progress until V1: 100 %
-    Main Tasks:
-        Fix Problem: Wave in last material osc., which changes the physics if length is changed.
+        Version Added: 1.0.1
+            Changed Gui style to ttks 'clam'
+            Changed Style of the Progressbar
+            Fixed a Bug for Electric Field displayment of the Im Part got too big.
         
-    Possible Upgrades:
-        Add Function Docstrings EVERYWHERE !!!
-        Add: Pairs Option !
-        #make 'get data' into a helper function
-        #layerStack: Thickness can be l/4, l/8, l/2, l, custom ?
-        #Improve Design
-        Coloriezed Plots
-        Compute R vs lamba vs layerpairs ? / R vs layerpairs
-        #Add More Materials
-        Ask for feedback     
-        Angle of Incidence ?
-        Add feedback/terminal window in programm (Nothing selected, errors, comp time, etc...)
-        Improve speed of: Refl vs Wavelength; And: Dont allow button inputs while running
-        if "Description" of material already exists add a number !
-        Improve: OnDouble Click function !
-        Compute E_MAX vs Parameter, E_MAX at Position
-        iF interpol range is reached, plot until this values and update range max
+        Version Added: 1.0.2
+            Fixed a Bug in the displayment of the animated el. Field
+            Added Design for new 'Compute' 'Parameter' vs 'Parameter' functionality
+            Added a Generate_Eps_Th helper function for epsilon/thickness stack calculation to safe space/improve visuality
+            Changed width of Thickness entry in 'Define Geometry'
+            Adjusted the R vs Wavelength Precision to be fixed: 200 points
+        
+        Version Added: 1.0.3
+            Hot Fix: Lambda as Thickness can be safed to geometry again
+            Hot Fix: Resulting from above: Geometries can be loaded properly again
+            Hot Fix: E_Field in Animation and in static are comparable and correct (hopefully)
+        
+    Progress until V2:
+        Main Tasks:
+            Is Problem?: Wave in last material osc., which changes the physics if length is changed.
+            
+        Possible Upgrades:
+            Add Function Docstrings EVERYWHERE !!!
+            Add: Pairs Option !
+            #make 'get data' into a helper function
+            #layerStack: Thickness can be l/4, l/8, l/2, l, custom ?
+            #Improve Design
+            Coloriezed Plots
+            Compute R vs lamba vs layerpairs ? / R vs layerpairs
+            #Add More Materials
+            Ask for feedback     
+            Angle of Incidence ?
+            Add feedback/terminal window in programm (Nothing selected, errors, comp time, etc...)
+            Improve speed of: Refl vs Wavelength; And: Dont allow button inputs while running
+            if "Description" of material already exists add a number !
+            Improve: OnDouble Click function !
+            Compute E_MAX vs Parameter, E_MAX at Position
+            iF interpol range is reached, plot until this values and update range max
         
 '''
+#region ***** Imports *****
 from tkinter_custom_button import TkinterCustomButton
 from tkinter import *
 from tkinter import ttk
@@ -55,19 +68,23 @@ from numpy import sqrt
 import matplotlib.pyplot as plt
 from scipy.interpolate import interp1d
 import threading
-# Command STRG+K+0/J FOLDS/UNFOLDS ALL FUNCTIONS
+#endregion 
+
+
 Infotext = str('''Transfer-Matrix-Solver Programm with Gui: All Distances are in [um]!
 Workflow: Geometry can be Designed in the upper region, edit entries by 'Double Clicking'. Example Geometries can be loaded.
 Incident and Exit Media have to be well defined
 Simulation: Center Wavelength is always used for layerstack thickness if not 'Custom'
-Program Version 1.0.0                                                                                      Author: Paul Steinmann''')
-is_on = True
+Program Version 1.0.3                                                                                      Author: Paul Steinmann''')
+
+
+
 
 
 class ROOT(Tk):
-    
+
     def __init__(self):
-    # General Stuff
+    # Main Window Setup
         super().__init__()
         s = ttk.Style()
         s.theme_use('clam')
@@ -165,9 +182,7 @@ class ROOT(Tk):
         self.button_clearAll = Button(self.frame0, text = "Clear All", bd = 3, width = 13, command = self.remove_all).grid(row = 8, column = 3)
         self.button_showGeo = Button(self.frame0, text = "Show Geometry", bd = 5, width = 13, height = 1, command = self.show_geometry, background = "coral")
         self.button_showGeo.grid(row = 8, column = 4, padx = 3)
-           
-        
-        
+               
     # Frame to Display: 'Show Geometry'
         self.frame_ShowGeo = Frame(self, padx = 0, pady = 0, highlightbackground="gray", highlightthickness= 3, bg = 'grey90')
         self.frame_ShowGeo.place(x = 610, y  = 0, width = 500, height = 330)
@@ -236,7 +251,7 @@ class ROOT(Tk):
         self.mode_Eval.current(0)
         self.label_vs = Label(self.dummyframeS, text = 'vs', bg = "grey80").grid(row = 0, column = 1, columnspan = 1, padx = 0)
         self.var_Para= StringVar()
-        self.mode_Para  = ttk.Combobox(self.dummyframeS, textvariable=self.var_Para, values= ['Thickness'], width = 10)
+        self.mode_Para  = ttk.Combobox(self.dummyframeS, textvariable=self.var_Para, values= ['Thickness', 'Pairs'], width = 10)
         self.mode_Para.grid(row = 0, column = 2, pady = 0, columnspan= 1, padx = 3)
         self.mode_Para.current(0)
         self.button_ParaRange = Button(self.dummyframeS, text = "set Range", bd = 3, command = self.parameter_range, bg = "grey80")
@@ -261,9 +276,8 @@ class ROOT(Tk):
         self.UBonn_Image = self.UBonn_Image.resize((42, 42))
         self.UBonn_Image = ImageTk.PhotoImage(self.UBonn_Image)
         self.image_UBonn = Label(self.frameI, image = self.UBonn_Image).place(x = 548, y = 30)
-        
 
-    #Geometry Functions
+    # Geometry Functions
     def materials(self, Material, wavelength): 
         '''
         Returns the Effective Refractive Index for a given Material, depending on the wavelength
@@ -568,9 +582,18 @@ class ROOT(Tk):
         self.tree.insert('', 'end', text='', values=(nameL2, typeL2, thickness, Pairs))
     
     def save_geometry(self):
+        '''
+        Similar to the Get_GeometryData function, reads treeview content and writes it to a desired data file.
+        Entries are separated by tab and each row starts in a new line.
+        '''
         tf = fd.asksaveasfile(mode='w', title ="Save file", defaultextension=".txt")
         data = ''
         
+        # Get data:
+        type_list = []
+        desc_list = []
+        d_list = []
+        Pairs  = []
         for line in self.tree.get_children():
             line_content = ''
             for value in self.tree.item(line)['values']:
@@ -578,16 +601,33 @@ class ROOT(Tk):
                     line_content = line_content+str(value)
                 else:
                     line_content = line_content + '\t' + str(value)
-            if data != '':
-                data = data + '\n' + line_content
-            else:
-                data = line_content
+            words = line_content.split('\t')
+            type_list.append(words[1])
+            try:
+                d_list.append(float(words[2]))
+            except:
+                words[2] = int(words[2].encode().replace(b"\xce\xbb / ",b"").decode())
+                if words[2] == 4:
+                    d_list.append("wavelength/4")
+                if words[2] == 2:
+                    d_list.append("wavelength/2")
+                if words[2] == 1:
+                    d_list.append("wavelength/1")
+            Pairs.append(int(words[3]))
+            desc_list.append(words[0])
+            
+        for i in range(len(Pairs)):
+            data = data + desc_list[i] + '\t' + type_list[i] + '\t' + str(d_list[i])  + '\t' + str(Pairs[i])
+            if i < len(Pairs)-1:
+                data = data + '\n'
+        
         tf.write(data)
         tf.close()
-        
+                   
     def load_geometry(self):
         '''
         '''
+        # Select a File and open it
         filetypes = (("text files", "*.txt"), ("All files", "*.*"))
         filename = fd.askopenfilename(title='Open a file', initialdir='Geometries', filetypes=filetypes)
         file = open(filename)
@@ -595,10 +635,13 @@ class ROOT(Tk):
         
         # Create Lists of words from file...
         words = file_cont.split('\t')
+        
         # And Split words connected by \n
         for i in range(len(words)):
             words[i] = words[i].split('\n')
-        # Now create the final list of all words in the file
+        # Here the last entry of a row is still connected to the first of the next
+        
+        # This is corrected here: Now create the final list of all words in the file 
         new = []
         for content in words:
             if len(content) == 2:
@@ -607,8 +650,15 @@ class ROOT(Tk):
             if len(content) == 1:
                 new.append(content[0])
         words = new
+        
         # Each line has 4 words: Insert content line by line in treeview
         for i in range(0, len(words), 4):
+            
+            # Change from 'wavelength' to 'lambda-symbol'
+            if words[i+2].split('/')[0] == "wavelength":
+                Num = words[i+2].split('/')[1]
+                words[i+2] = (b"\xce\xbb / ").decode() + Num
+            
             self.tree.insert('', 'end', text='', values=(words[i], words[i+1], words[i+2], words[i+3]))
 
         file.close()
@@ -681,7 +731,7 @@ class ROOT(Tk):
         self.matplotCanvas(frame = self.frame_ShowGeo, x = x_list, y = y_list, xlabel= 'length [um]',
                            ylabel= 'Eff. Refractive Index', label = '', color = 'orange', ylower = 0, yupper = 5, figsize=(4.94, 2.8))
                   
-    #Simulation Functions
+    # Simulation Functions
     def R_T_atwavelength(self):
         '''
         '''
@@ -705,7 +755,7 @@ class ROOT(Tk):
         w_min = float(self.entry_wlRangeFrom.get())
         w_max = float(self.entry_wlRangeTo.get())
         diff = w_max - w_min
-        step = diff/500
+        step = diff/200
         R_list = []
         w_list = []
         while w_min <= w_max:
@@ -763,7 +813,15 @@ class ROOT(Tk):
             ani = self.E_Field_Animation(x, E_Field, index, 200, 10)
 
         elif self.var_ani.get() == 0:
-            E_Field = E_Field.real/abs(E_Field.real).max()*index.real.max()
+            i_max = 0
+            E_old = E_Field.max()
+            for i in range(91):
+                E_new = E_Field*np.exp(-1.0j*np.pi*i/90)
+                if E_new.max() > E_old:
+                    i_max = i
+                    E_old = E_new.max()
+            print(i_max)
+            E_Field = np.real(E_Field*np.exp(-1.0j*np.pi*i_max/90))/abs(E_Field).max()*index.real.max()
             self.matplotCanvas(self.frame_ShowSim, [x, x], [E_Field, index.real], color = ['tab:red', 'orange'])
     
     def RvsParameter(self):
@@ -773,40 +831,69 @@ class ROOT(Tk):
         self.Prog_RvsP.grid(row = 7, column = 0, padx = 3, columnspan = 4)
         
         # Get data:
-        mode = self.mode_Para.get()
+        main_mode = self.mode_Eval.get()
+        sec_mode = self.mode_Para.get()
+        
+        wavelength = float(self.entry_wlCentre.get()) #um
+        Chosen_Medium = self.entry_Para.get()
+        
         lower = self.ParamRange_lower
         upper = self.ParamRange_upper
         step  = self.ParamRange_Step
-        wavelength = float(self.entry_wlCentre.get()) #um
+        
+        # Generate Stacks
         descr, r_index_list, n_list, d_list, Pairs = self.Get_GeometryData(wavelength * 1000) # Wavelength in nm
         R_list = []
         T_list = []
         E_list = []
         L_list = []
         wavelength = np.array([wavelength])
-        Chosen_Medium = self.entry_Para.get()
         counter = 0
         
-        if mode == "Pairs":
-            lower = int(self.ParamRange_lower)
-            upper = int(self.ParamRange_upper)
-            step  = int(self.ParamRange_Step)
-            for i in range(len(descr)):
-                if counter > 1:
-                    print("WARNING: Layer name is not unique.")
-                if descr[i] == Chosen_Medium:
-                    MediaIndex = i
-                    counter = counter + 1
-                    current = lower
-                    
-        if mode == "Thickness":
-            for i in range(len(descr)):
-                if counter > 1:
-                    print("WARNING: Layer name is not unique.")
-                if descr[i] == Chosen_Medium:
-                    MediaIndex = i
-                    counter = counter + 1
-                    current = lower
+        if main_mode == "Reflectivity":
+            if sec_mode == "Pairs":
+                lower = int(self.ParamRange_lower)
+                upper = int(self.ParamRange_upper)
+                step  = int(self.ParamRange_Step)
+                for i in range(len(descr)):
+                    if counter > 1:
+                        print("WARNING: Layer name is not unique.")
+                    if descr[i] == Chosen_Medium:
+                        MediaIndex = i
+                        counter = counter + 1
+                        current = lower
+                        
+            if sec_mode == "Thickness":
+                for i in range(len(descr)):
+                    if counter > 1:
+                        print("WARNING: Layer name is not unique.")
+                    if descr[i] == Chosen_Medium:
+                        MediaIndex = i
+                        counter = counter + 1
+                        current = lower
+        if main_mode == "E_Field_max":
+            if sec_mode == "Pairs":
+                lower = int(self.ParamRange_lower)
+                upper = int(self.ParamRange_upper)
+                step  = int(self.ParamRange_Step)
+                for i in range(len(descr)):
+                    if counter > 1:
+                        print("WARNING: Layer name is not unique.")
+                    if descr[i] == Chosen_Medium:
+                        MediaIndex = i
+                        counter = counter + 1
+                        current = lower
+                        
+            if sec_mode == "Thickness":
+                for i in range(len(descr)):
+                    if counter > 1:
+                        print("WARNING: Layer name is not unique.")
+                    if descr[i] == Chosen_Medium:
+                        MediaIndex = i
+                        counter = counter + 1
+                        current = lower
+        
+        
                 
                 
         while current <= upper: #Iterate over the Parameter range
@@ -852,7 +939,7 @@ class ROOT(Tk):
         print("Reflection Minimum at: ", L_list[R_list.index(min(R_list))])
         return min(R_list) 
     
-    #Helper Functions:
+    # Helper Functions:
     def Generate_Eps_Th(self, wavelength):
         desc_list, r_index_list, n_list, d_list, Pairs = self.Get_GeometryData(wavelength * 1000) # Wavelength in nm
         k = 0
@@ -1294,15 +1381,16 @@ class ROOT(Tk):
         # based on https://matplotlib.org/gallery/animation/simple_anim.html
 
         freq = periods/(steps - 1)
+        w = freq*2*np.pi
         max_E_Field = abs(E_Field).max()
         max_index = index.real.max()
 
         # helper function to calculate field at step n
         def field_at_step(n):
             if is_on == True:
-                result = abs(np.real(E_Field*np.exp(-2.0j*np.pi*freq*n)))/max_E_Field*max_index
+                result = abs(np.real(E_Field*np.exp(-1.0j*w*n)))/max_E_Field*max_index
             else:
-                result = np.real(E_Field*np.exp(-2.0j*np.pi*freq*n))/max_E_Field*max_index
+                result = np.real(E_Field*np.exp(-1.0j*w*n))/max_E_Field*max_index
             return result
 
         # set up initial plot
@@ -1340,6 +1428,11 @@ class ROOT(Tk):
     
     
 if __name__ == "__main__":
+    
+    # Additional Variables:
+    is_on = True
+    
+    # Set GUI and start mainloop
     root = ROOT()
     root.mainloop()
     
