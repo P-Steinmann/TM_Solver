@@ -22,31 +22,64 @@
             Hot Fix: Resulting from above: Geometries can be loaded properly again
             Hot Fix: E_Field in Animation and in static are comparable and correct (hopefully)
         
+        Version Added: 1.0.4
+            Hot Fix: Reflectivity was computed starting from Vacuum, giving slightly wrong values, this was adjusted
+            Final Fixes for E_Field/ E_Field animation (this time really, i hope)
+            Added assertion errors in 'RvsParameter'
+            Worked on RvsParameter... Soon there might be E_Field available ! Needs: Compute EMax in Layer... vs Thickness/Pairs of Layer ...
+                Maybe if mode "E_Max" is selected then open up window where one can chose a medium
+        
+        Version Added: 1.0.5
+            Plot labels for 'RvsParameter' adjusted
+            Added in 'Add Layerstack' individual custom thicknesses
+            Added some docstrings and smoothed some function
+        
+        Version Added: 1.0.6
+            Changed the order of last row in Simulation Settings
+            Added label 'of' in last row in Simulation Settings
+            Beta Version of: Compute E_Field (in Material) vs "Thickness/Pairs" of Medium is done !
+            Adjusted sample Geometries a little bit... Version 1.1 can come soon !!!
+        
+        Version Added: 1.0.7 -> New Version: 1.1.0
+            Hot Fix: Corrected MgF2 refr. index, added absorbance of material
+            RvsParameter now prints maximum and minimum
+            Added some docstrings
+            RvsParameter looks a little better...
+            Combobox for RvsParameter functionalities added with automatic adjustment !
+            Repositioned Set Range Top window
+    
+    Version: 1.1 08.02.2022
+    
+        
     Progress until V2:
-        Main Tasks:
-            Is Problem?: Wave in last material osc., which changes the physics if length is changed.
             
         Possible Upgrades:
-            Add Function Docstrings EVERYWHERE !!!
-            Add: Pairs Option !
+            #'Compute R/E (in material) vs thickness/pairs of material' Clean up !
+            #Add: Pairs Option !
             #make 'get data' into a helper function
             #layerStack: Thickness can be l/4, l/8, l/2, l, custom ?
             #Improve Design
-            Coloriezed Plots
-            Compute R vs lamba vs layerpairs ? / R vs layerpairs
+            # / R vs layerpairs
             #Add More Materials
+            #Add Combobox for RvsParameter functionalities!
+            
+            Coloriezed Plots
+            Compute R vs lamba vs layerpairs ?
+            Add Function Docstrings EVERYWHERE !!!
             Ask for feedback     
-            Angle of Incidence ?
+                Angle of Incidence ? ---> This would be a huge upgrade to the programm, thus: Would imply version 2.0
             Add feedback/terminal window in programm (Nothing selected, errors, comp time, etc...)
             Improve speed of: Refl vs Wavelength; And: Dont allow button inputs while running
             if "Description" of material already exists add a number !
+            Multi-Processing ?
             Improve: OnDouble Click function !
             Compute E_MAX vs Parameter, E_MAX at Position
             iF interpol range is reached, plot until this values and update range max
+            Changable speed of animation
         
 '''
 #region ***** Imports *****
-from tkinter_custom_button import TkinterCustomButton
+
 from tkinter import *
 from tkinter import ttk
 import os
@@ -75,9 +108,7 @@ Infotext = str('''Transfer-Matrix-Solver Programm with Gui: All Distances are in
 Workflow: Geometry can be Designed in the upper region, edit entries by 'Double Clicking'. Example Geometries can be loaded.
 Incident and Exit Media have to be well defined
 Simulation: Center Wavelength is always used for layerstack thickness if not 'Custom'
-Program Version 1.0.3                                                                                      Author: Paul Steinmann''')
-
-
+Program Version 1.1.0                                                                                      Author: Paul Steinmann''')
 
 
 
@@ -216,9 +247,9 @@ class ROOT(Tk):
         self.button_RT = Button(self.frame_Sim, text = "Compute R/T at Center Wavelength", bd = 3, width = 40, command = self.R_T_atwavelength)
         self.button_RT.grid(row = 3, column = 0, columnspan = 2, pady = 3, padx = 5)
         self.var_R = StringVar()
-        self.label_RT = Label(self.frame_Sim, textvariable= self.var_R, bg = "grey90", width = 18).grid(row = 3, column = 2, columnspan = 1)
+        self.label_RT = Label(self.frame_Sim, textvariable= self.var_R, bg = "grey90", width = 16).grid(row = 3, column = 2, columnspan = 1)
         self.var_T = StringVar()
-        self.label_RT = Label(self.frame_Sim, textvariable= self.var_T, bg = "grey90", width = 18).grid(row = 3, column = 3, columnspan = 1)
+        self.label_RT = Label(self.frame_Sim, textvariable= self.var_T, bg = "grey90", width = 16).grid(row = 3, column = 3, columnspan = 1)
         # Row 4
         self.button_RvsW = Button(self.frame_Sim, text = "Compute Reflectivity vs Wavelength", bd = 3, width = 40, command = self.R_vs_wavelength)
         self.button_RvsW.grid(row = 4, column = 0, columnspan = 2, pady = 3, padx = 5)
@@ -236,17 +267,18 @@ class ROOT(Tk):
         self.button_sw = Button(self.frame_Sim, image = self.abs, bd = 3, command = self.switch)
         self.button_sw.grid(row = 5, column = 2, columnspan = 1, pady = 3)
         self.var_ani = IntVar()
-        self.tickbox_ani = Checkbutton(self.frame_Sim, text = "Toggle Animation", variable=self.var_ani, onvalue=1, offvalue=0)
+        self.tickbox_ani = Checkbutton(self.frame_Sim, text = "Toggle Animation", variable=self.var_ani, onvalue=1, offvalue=0, width = 14)
         self.tickbox_ani.grid(row = 5, column = 3, columnspan=1, rowspan=1)
         
         # Row 6
-        self.button_RvT = Button(self.frame_Sim, text = "Compute", bd = 3, width = 20, command = self.RvsParameter)
-        self.button_RvT.grid(row = 6, column = 0, columnspan = 1, pady = 3, padx = 3)
+        self.button_RvT = Button(self.frame_Sim, text = "Compute", bd = 3, width = 18, command = self.RvsParameter)
+        self.button_RvT.grid(row = 6, column = 0, columnspan = 1, pady = 3, padx = 5)
         
         self.dummyframeS = Frame(self.frame_Sim, bg = 'grey80')
         self.dummyframeS.grid(row = 6, column = 1, pady = 0, columnspan = 2, padx = 0)
         self.var_Eval= StringVar()
-        self.mode_Eval  = ttk.Combobox(self.dummyframeS, textvariable=self.var_Eval, values= ['Reflectivity', 'E_Field_Max'], width = 13)
+        self.var_Eval.trace('w', self.E_max_selected)
+        self.mode_Eval  = ttk.Combobox(self.dummyframeS, textvariable=self.var_Eval, values= ['Reflectivity', 'E_Field'], width = 10)
         self.mode_Eval.grid(row = 0, column = 0, pady = 0, columnspan= 1, padx = 3)
         self.mode_Eval.current(0)
         self.label_vs = Label(self.dummyframeS, text = 'vs', bg = "grey80").grid(row = 0, column = 1, columnspan = 1, padx = 0)
@@ -254,19 +286,26 @@ class ROOT(Tk):
         self.mode_Para  = ttk.Combobox(self.dummyframeS, textvariable=self.var_Para, values= ['Thickness', 'Pairs'], width = 10)
         self.mode_Para.grid(row = 0, column = 2, pady = 0, columnspan= 1, padx = 3)
         self.mode_Para.current(0)
-        self.button_ParaRange = Button(self.dummyframeS, text = "set Range", bd = 3, command = self.parameter_range, bg = "grey80")
-        self.button_ParaRange.grid(row = 0, column = 3, padx = 3)
-        self.entry_Para = Entry(self.frame_Sim, width = 15, highlightbackground="grey", highlightthickness= 2)
-        self.entry_Para.grid(row = 6, column = 3, pady = 5, padx = 0)
-        self.entry_Para.insert(END, 'Medium1')
-        if self.mode_Para.get() == 'Pairs':
-            self.ParamRange_upper = 20
-            self.ParamRange_lower = 0
-            self.ParamRange_Step  = 1
-        else:
-            self.ParamRange_lower = 0
-            self.ParamRange_upper = 1
-            self.ParamRange_Step  = 0.0005
+        self.label_vs = Label(self.dummyframeS, text = 'of', bg = "grey80").grid(row = 0, column = 3, columnspan = 1, padx = 0)
+        
+        material_list_para = ['']
+        self.var_Mat_para = StringVar()
+        mode_Mat_para  = ttk.Combobox(self.dummyframeS, textvariable= self.var_Mat_para, values= material_list_para, width = 12)
+        mode_Mat_para.grid(row = 0, column = 4, pady = 5, padx = 3, columnspan= 1)
+        mode_Mat_para.current(0)
+
+        
+        #self.entry_Para = Entry(self.dummyframeS, width = 12, highlightbackground="grey", highlightthickness= 2)
+        #self.entry_Para.grid(row = 0, column = 4, pady = 5, padx = 3)
+        #self.entry_Para.insert(END, 'Medium1')
+        
+        self.button_ParaRange = Button(self.frame_Sim, text = "set Range", bd = 3, command = self.parameter_range, bg = "grey80")
+        self.button_ParaRange.grid(row = 6, column = 3, padx = 5)
+        
+        
+        self.ParamRange_upper = 10
+        self.ParamRange_lower = 1
+        self.ParamRange_Step  = 1
         
     # Info Frame
         self.frameI = Frame(self, highlightbackground="gray", highlightthickness= 3, bg = 'grey90')
@@ -280,7 +319,8 @@ class ROOT(Tk):
     # Geometry Functions
     def materials(self, Material, wavelength): 
         '''
-        Returns the Effective Refractive Index for a given Material, depending on the wavelength
+        Returns the Effective Refractive Index for a given Material, depending on the wavelength.
+        Values are for room temperature !
         
         Function Parameters
         ----------
@@ -365,10 +405,13 @@ class ROOT(Tk):
             n = complex(n , k)
             return n
         def n_MgF2(wavelength):
-            w = (wavelength/1000)**2 # For sellmeier equation
-            n = 1 + 0.4875511*w/(w-0.0433841**2) + 0.39875031*w/(w-0.09461442**2) + 2.3120353*w/(w-23.793604**2)
-            n = sqrt(n)
-            k = 0 # Good Approximation
+            if wavelength < 200 or wavelength > 2000:
+                print("WARNING: Wavelength range for Material exceeded (MgF2)")
+            if wavelength >= 500:
+                n = (1.4168-1.424)/1800 * wavelength + 1.425
+            else:
+                n = (1.424 - 1.474)/300 * wavelength + 1.507
+            k =  (1.69e-4 - 1.827e-3)/(2000 - 200) * wavelength + 0.002012 # Good Approximation
             n = complex(n , k)
             return n
         def n_InAs(wavelength):
@@ -437,6 +480,8 @@ class ROOT(Tk):
             n = complex(n , k)
             return n
         def n_Chrom(wavelength):
+            if wavelength < 190 or wavelength > 1900:
+                print("WARNING: Wavelength range for Material exceeded (Chrom)")
             # Wavelength data in microns
             n = interp1d(dataChromWl, dataChromn)
             n = n(wavelength/1000)
@@ -445,6 +490,8 @@ class ROOT(Tk):
             n = complex(n , k)
             return n
         def n_Copper(wavelength):
+            if wavelength < 190 or wavelength > 1900:
+                print("WARNING: Wavelength range for Material exceeded (Copper)")
             # Wavelength data in microns
             n = interp1d(dataCopperWl, dataCoppern)
             n = n(wavelength/1000)
@@ -453,6 +500,8 @@ class ROOT(Tk):
             n = complex(n , k)
             return n
         def n_Gold(wavelength):
+            if wavelength < 190 or wavelength > 1900:
+                print("WARNING: Wavelength range for Material exceeded (Gold)")
             # Wavelength data in microns
             n = interp1d(dataGoldWl, dataGoldn)
             n = n(wavelength/1000)
@@ -461,6 +510,8 @@ class ROOT(Tk):
             n = complex(n , k)
             return n
         def n_Silver(wavelength):
+            if wavelength < 190 or wavelength > 1900:
+                print("WARNING: Wavelength range for Material exceeded (Silver)")
             # Wavelength data in microns
             n = interp1d(dataSilverWl, dataSilvern)
             n = n(wavelength/1000)
@@ -562,34 +613,69 @@ class ROOT(Tk):
         return r_index
 
     def add_material(self):
+        '''
+        Adds an in the GUI defined Material to the Treeview Layer list
+
+        Reads the parameters of material description, type and thickness
+        '''
         name = self.entry_name.get()    #str
         type = self.mode_Mat.get()     #str
         thickness = float(self.entry_th.get()) #float
-        print(f"Layer Name: '{name}', Type: '{type}', thickness: '{thickness} [um]'")
         self.tree.insert('', 'end', text='', values=(name, type, thickness, 0))
         
+        # Create Combobox of Layers
+        wavel = float(self.entry_wlCentre.get())*1000
+        desc_list, r_index_list, n_list, t_list, is_stack  = self.Get_GeometryData(wavel)
+        self.material_list_para = desc_list
+        self.var_Mat_para = StringVar()
+        mode_Mat_para  = ttk.Combobox(self.dummyframeS, textvariable= self.var_Mat_para, values= self.material_list_para, width = 12)
+        mode_Mat_para.grid(row = 0, column = 4, pady = 5, padx = 3, columnspan= 1)
+        mode_Mat_para.current(0)
+        self.frame_Sim.update_idletasks()
+        
     def add_layerstack(self):
+        '''
+        Adds an in the GUI defined Layerstack to the Treeview Layer list
+
+        Reads the parameters of both layer descriptions, types and thicknesses
+            Thicknesses are either a fraction of the center wavelength or custom given
+        '''
         nameL1 = self.entry_l1.get()
         nameL2 = self.entry_l2.get()
         typeL1 = self.mode_l1.get() 
         typeL2 = self.mode_l2.get()
         Pairs = int(self.entry_Npairs.get())
+
         thickness = self.mode_stack.get()
-        if thickness == 'Custom':
+        thickness2= thickness
+        if thickness == 'Custom':   
             thickness = self.entry_custom.get()
-        
+            thickness2= self.entry_custom2.get()
+
         self.tree.insert('', 'end', text='', values=(nameL1, typeL1, thickness, Pairs))
-        self.tree.insert('', 'end', text='', values=(nameL2, typeL2, thickness, Pairs))
+        self.tree.insert('', 'end', text='', values=(nameL2, typeL2, thickness2, Pairs))
+        
+        # Create Combobox of Layers
+        wavel = float(self.entry_wlCentre.get())*1000
+        desc_list, r_index_list, n_list, t_list, is_stack  = self.Get_GeometryData(wavel)
+        self.material_list_para = desc_list
+        self.var_Mat_para = StringVar()
+        mode_Mat_para  = ttk.Combobox(self.dummyframeS, textvariable= self.var_Mat_para, values= self.material_list_para, width = 12)
+        mode_Mat_para.grid(row = 0, column = 4, pady = 5, padx = 3, columnspan= 1)
+        mode_Mat_para.current(0)
+        self.frame_Sim.update_idletasks()
     
     def save_geometry(self):
         '''
         Similar to the Get_GeometryData function, reads treeview content and writes it to a desired data file.
         Entries are separated by tab and each row starts in a new line.
         '''
+
+        # Open Explorer: Save file as ...
         tf = fd.asksaveasfile(mode='w', title ="Save file", defaultextension=".txt")
-        data = ''
         
-        # Get data:
+        # Get data from treeview content and write to lists.
+        data = ''
         type_list = []
         desc_list = []
         d_list = []
@@ -606,7 +692,7 @@ class ROOT(Tk):
             try:
                 d_list.append(float(words[2]))
             except:
-                words[2] = int(words[2].encode().replace(b"\xce\xbb / ",b"").decode())
+                words[2] = int(words[2].encode().replace(b"\xce\xbb / ",b"").decode()) # translate 'lambda' sign to wavelength
                 if words[2] == 4:
                     d_list.append("wavelength/4")
                 if words[2] == 2:
@@ -626,6 +712,8 @@ class ROOT(Tk):
                    
     def load_geometry(self):
         '''
+        Opens the Explorer file selection to load a data file 
+        and writes the files content into the treeview tabular 
         '''
         # Select a File and open it
         filetypes = (("text files", "*.txt"), ("All files", "*.*"))
@@ -662,28 +750,89 @@ class ROOT(Tk):
             self.tree.insert('', 'end', text='', values=(words[i], words[i+1], words[i+2], words[i+3]))
 
         file.close()
+        
+        # Create Combobox of Layers
+        wavel = float(self.entry_wlCentre.get())*1000
+        desc_list, r_index_list, n_list, t_list, is_stack  = self.Get_GeometryData(wavel)
+        self.material_list_para = desc_list
+        self.var_Mat_para = StringVar()
+        mode_Mat_para  = ttk.Combobox(self.dummyframeS, textvariable= self.var_Mat_para, values= self.material_list_para, width = 12)
+        mode_Mat_para.grid(row = 0, column = 4, pady = 5, padx = 3, columnspan= 1)
+        mode_Mat_para.current(0)
+        self.frame_Sim.update_idletasks()
     
     def remove_selection(self):
+        '''
+        Deletes an in the treeview tabular selected row
+        '''
         selected = self.tree.selection()[0]
         self.tree.delete(selected)
+        
+        # Create Combobox of Layers
+        wavel = float(self.entry_wlCentre.get())*1000
+        desc_list, r_index_list, n_list, t_list, is_stack  = self.Get_GeometryData(wavel)
+        self.material_list_para = desc_list
+        self.var_Mat_para = StringVar()
+        mode_Mat_para  = ttk.Combobox(self.dummyframeS, textvariable= self.var_Mat_para, values= self.material_list_para, width = 12)
+        mode_Mat_para.grid(row = 0, column = 4, pady = 5, padx = 3, columnspan= 1)
+        mode_Mat_para.current(0)
+        self.frame_Sim.update_idletasks()
     
     def remove_all(self):
+        '''
+        Removes all treeview tabular content
+        '''
         self.tree.delete(*self.tree.get_children())
+        
+        # Create Combobox of Layers
+        wavel = float(self.entry_wlCentre.get())*1000
+        desc_list, r_index_list, n_list, t_list, is_stack  = self.Get_GeometryData(wavel)
+        self.material_list_para = ['']
+        self.var_Mat_para = StringVar()
+        mode_Mat_para  = ttk.Combobox(self.dummyframeS, textvariable= self.var_Mat_para, values= self.material_list_para, width = 12)
+        mode_Mat_para.grid(row = 0, column = 4, pady = 5, padx = 3, columnspan= 1)
+        mode_Mat_para.current(0)
+        self.frame_Sim.update_idletasks()
     
     def move_up(self):
+        '''
+        A selected entry in the treeview tabular is moved up by one position
+        '''
         leaves = self.tree.selection() #Get all leaves of the tree
         for i in reversed(leaves):
             self.tree.move(i, self.tree.parent(i), self.tree.index(i)-1)
+        
+        # Create Combobox of Layers
+        wavel = float(self.entry_wlCentre.get())*1000
+        desc_list, r_index_list, n_list, t_list, is_stack  = self.Get_GeometryData(wavel)
+        self.material_list_para = desc_list
+        self.var_Mat_para = StringVar()
+        mode_Mat_para  = ttk.Combobox(self.dummyframeS, textvariable= self.var_Mat_para, values= self.material_list_para, width = 12)
+        mode_Mat_para.grid(row = 0, column = 4, pady = 5, padx = 3, columnspan= 1)
+        mode_Mat_para.current(0)
+        self.frame_Sim.update_idletasks()
     
     def move_down(self):
+        '''
+        A selected entry in the treeview tabular is moved down by one position
+        '''
         leaves = self.tree.selection() #Get all leaves of the tree
         for i in reversed(leaves):
             self.tree.move(i, self.tree.parent(i), self.tree.index(i)+1)
+        
+        # Create Combobox of Layers
+        wavel = float(self.entry_wlCentre.get())*1000
+        desc_list, r_index_list, n_list, t_list, is_stack  = self.Get_GeometryData(wavel)
+        self.material_list_para = desc_list
+        self.var_Mat_para = StringVar()
+        mode_Mat_para  = ttk.Combobox(self.dummyframeS, textvariable= self.var_Mat_para, values= self.material_list_para, width = 12)
+        mode_Mat_para.grid(row = 0, column = 4, pady = 5, padx = 3, columnspan= 1)
+        mode_Mat_para.current(0)
+        self.frame_Sim.update_idletasks()
     
     def show_geometry(self):
         '''
         Displayes the Desiged Geometry in a Plot: Ref.index vs thickness
-        Might need improvement since plots are weird if 1 material is long
         '''
         # Analyse Treeview content and extract: Materials, Thicknesses and if it is a layerstack or not
         wavel = float(self.entry_wlCentre.get())*1000
@@ -726,7 +875,6 @@ class ROOT(Tk):
                     x_t = x_t + t_list[k+1]
                 k = k + 1
             k = k +1
-
         # Display the final data:
         self.matplotCanvas(frame = self.frame_ShowGeo, x = x_list, y = y_list, xlabel= 'length [um]',
                            ylabel= 'Eff. Refractive Index', label = '', color = 'orange', ylower = 0, yupper = 5, figsize=(4.94, 2.8))
@@ -734,19 +882,46 @@ class ROOT(Tk):
     # Simulation Functions
     def R_T_atwavelength(self):
         '''
+        Computes the Reflectivity and Transmission of the,
+        in the treeview tabular, given structure at the defined center wavelength.
+
+        Uses the T_R_Calculation function
+        
+        Function Parameters
+        ----------
+        None
+        
+        Returns
+        -------
+        None
         '''
+        print("***** Compute Reflectivity/Transmission at given Wavelength *****")
         # Get data:
         wavelength = float(self.entry_wlCentre.get()) #um
         epsilon, thickness = self.Generate_Eps_Th(wavelength)
-
-        t,r,T,R =  self.T_R_Calculation(thickness, epsilon, np.array([wavelength]), Medium_in = 1, Medium_out = 1)
+        t,r,T,R =  self.T_R_Calculation(thickness, epsilon, np.array([wavelength]), Medium_in = sqrt(epsilon[0]), Medium_out = sqrt(epsilon[-1]))
+        
         R_formatted = '{0:.4f}'.format(R[0])
         T_formatted = '{0:.4f}'.format(T[0])
         
         self.var_R.set(f'Reflectivity: {R_formatted}')
         self.var_T.set(f'Transmittivity: {T_formatted}')
+
+        print(f"Reflectivity: {np.round(R,6)}, Transmittivity {np.round(T,6)}")
     
     def R_vs_wavelength(self): # Can this be faster ? 
+        '''
+        Derives the Reflectivity of the whole structure in dependency of the incident wavelength
+        
+        Function Parameters
+        ----------
+        None
+        
+        Returns
+        -------
+        None
+        '''
+        print("***** Compute Reflectivity vs Wavelength *****")
         threading.Thread().start()
         self.Prog_RvsW = ttk.Progressbar(self.frame_Sim, style="bar.Horizontal.TProgressbar", orient = "horizontal", mode = "determinate", length = 300)
         self.Prog_RvsW.grid(row = 7, column = 0, padx = 3, columnspan = 4)
@@ -759,7 +934,6 @@ class ROOT(Tk):
         R_list = []
         w_list = []
         while w_min <= w_max:
-            
             # Get data:
             wavelength = w_min #in um
             epsilon, thickness = self.Generate_Eps_Th(wavelength)
@@ -768,7 +942,6 @@ class ROOT(Tk):
             R_list.append(R)
             w_list.append(w_min)
             
-            
             w_min = w_min + step
             self.Prog_RvsW["value"] = 100*(diff - (w_max - w_min))/(diff)
             self.frame_Sim.update_idletasks()
@@ -776,11 +949,10 @@ class ROOT(Tk):
         self.matplotCanvas(self.frame_ShowSim, w_list, R_list, xlabel = 'Wavelength [um]', ylabel = 'Reflectivity', color = "tab:red", figsize=(4.9, 3.05))
         self.label_RvsW = Label(self.frame_Sim, text = "Finished !", width = 18, bg = 'grey90').grid(row = 4, column = 2, columnspan = 1)
         
-    def E_field_distribution(self):
+    def E_field_distribution(self): # ADD X,Y LABEL
         '''
         Compute the El. Field Distribution for in 'Geometry' given Materials
         Uses the Entered Center Wavelength to calculate the stack
-        
 
         Function Parameters
         ----------
@@ -790,6 +962,7 @@ class ROOT(Tk):
         -------
         None
         '''
+        print("***** Compute E Field Distribution *****")
         # Init Progressbar
         self.Prog_E = ttk.Progressbar(self.frame_Sim, style="bar.Horizontal.TProgressbar", orient = "horizontal", mode = "determinate", length = 300)
         self.Prog_E.grid(row = 7, column = 0, padx = 3, columnspan = 4)
@@ -802,17 +975,18 @@ class ROOT(Tk):
         # Derive Field
         E_Field, x, index = self.E_Field_Calculation(thickness, epsilon, w_centre, 5000)
 
-        # Absolute Field or norm. Field:
-        if is_on == True:
-            E_Field = abs(E_Field)
-        
-        # Animation of Field or Static View:
+ 
+        # Animation of Field:
         if self.var_ani.get() == 1:
-            #threading.Thread(target = self.E_Field_Animation, args = (x, E_Field, index)).start() 
             
+            #threading.Thread(target = self.E_Field_Animation, args = (x, E_Field, index)).start() 
             ani = self.E_Field_Animation(x, E_Field, index, 200, 10)
-
+            if is_on == True:
+                E_Field = abs(E_Field)
+            
+        # Static view:
         elif self.var_ani.get() == 0:
+            # Phase of E_Field is adjusted to show maximum amplitude
             i_max = 0
             E_old = E_Field.max()
             for i in range(91):
@@ -820,87 +994,105 @@ class ROOT(Tk):
                 if E_new.max() > E_old:
                     i_max = i
                     E_old = E_new.max()
-            print(i_max)
-            E_Field = np.real(E_Field*np.exp(-1.0j*np.pi*i_max/90))/abs(E_Field).max()*index.real.max()
+            # Absolute Field or norm. Field:
+            if is_on == True:
+                E_Field = np.real(E_Field*np.exp(-1.0j*np.pi*i_max/90))/abs(E_Field).max()*index.real.max()
+                E_Field = abs(E_Field)
+            else:
+                E_Field = np.real(E_Field*np.exp(-1.0j*np.pi*i_max/90))/abs(E_Field).max()*index.real.max()
+
             self.matplotCanvas(self.frame_ShowSim, [x, x], [E_Field, index.real], color = ['tab:red', 'orange'])
     
     def RvsParameter(self):
         '''
+        Derives the Reflectivity (or the Electric Field Maximum) of the whole structure (in a desired medium)
+        in dependency of the Thickness/(No. of layer-pairs) of a certain layer(-stack)
+        
+        Function Parameters
+        ----------
+        None
+        
+        Returns
+        -------
+        None
         '''
+        print("***** Compute Value vs Parameter *****")
+        
+        # Initialising Progressbar
         self.Prog_RvsP = ttk.Progressbar(self.frame_Sim, style="bar.Horizontal.TProgressbar", orient = "horizontal", mode = "determinate", length = 300)
         self.Prog_RvsP.grid(row = 7, column = 0, padx = 3, columnspan = 4)
         
-        # Get data:
+        # Get data from GUI:
         main_mode = self.mode_Eval.get()
         sec_mode = self.mode_Para.get()
+        wavelength = float(self.entry_wlCentre.get()) # this is in um
+        Chosen_Medium = self.var_Mat_para.get()
         
-        wavelength = float(self.entry_wlCentre.get()) #um
-        Chosen_Medium = self.entry_Para.get()
+        # Range for Parameter Scan
+        lower = float(self.ParamRange_lower)
+        upper = float(self.ParamRange_upper)
+        step  = float(self.ParamRange_Step)
+        print(f"Scanning from {lower} to {upper} in steps of {step}.")
+        current = lower
         
-        lower = self.ParamRange_lower
-        upper = self.ParamRange_upper
-        step  = self.ParamRange_Step
-        
-        # Generate Stacks
+        # Generate Stacks of the starting geometry
         descr, r_index_list, n_list, d_list, Pairs = self.Get_GeometryData(wavelength * 1000) # Wavelength in nm
         R_list = []
-        T_list = []
         E_list = []
         L_list = []
         wavelength = np.array([wavelength])
         counter = 0
         
-        if main_mode == "Reflectivity":
-            if sec_mode == "Pairs":
-                lower = int(self.ParamRange_lower)
-                upper = int(self.ParamRange_upper)
-                step  = int(self.ParamRange_Step)
-                for i in range(len(descr)):
-                    if counter > 1:
-                        print("WARNING: Layer name is not unique.")
-                    if descr[i] == Chosen_Medium:
-                        MediaIndex = i
-                        counter = counter + 1
-                        current = lower
-                        
-            if sec_mode == "Thickness":
-                for i in range(len(descr)):
-                    if counter > 1:
-                        print("WARNING: Layer name is not unique.")
-                    if descr[i] == Chosen_Medium:
-                        MediaIndex = i
-                        counter = counter + 1
-                        current = lower
-        if main_mode == "E_Field_max":
-            if sec_mode == "Pairs":
-                lower = int(self.ParamRange_lower)
-                upper = int(self.ParamRange_upper)
-                step  = int(self.ParamRange_Step)
-                for i in range(len(descr)):
-                    if counter > 1:
-                        print("WARNING: Layer name is not unique.")
-                    if descr[i] == Chosen_Medium:
-                        MediaIndex = i
-                        counter = counter + 1
-                        current = lower
-                        
-            if sec_mode == "Thickness":
-                for i in range(len(descr)):
-                    if counter > 1:
-                        print("WARNING: Layer name is not unique.")
-                    if descr[i] == Chosen_Medium:
-                        MediaIndex = i
-                        counter = counter + 1
-                        current = lower
+        # User has to input an Medium where the E_Field has to be analysed
+        if main_mode == "E_Field":
+            try:
+                print("Deriving Electric Field Maximum in '", self.Analysed_Medium, "'")
+                Analysed_Medium = self.Analysed_Medium
+            except:
+                print("No Medium for analysis has been selected.")
+
+        # Adjust xlabel for later plotting, Adjust scan parameters and get Index of chosen media
+        if sec_mode == "Pairs":
+            lower = int(self.ParamRange_lower)
+            upper = int(self.ParamRange_upper)
+            step  = int(self.ParamRange_Step)
+            for i in range(len(descr)):
+                if descr[i] == Chosen_Medium:
+                    MediaIndex = i
+                    counter = counter + 1
+                if main_mode == "E_Field":
+                    if descr[i] == Analysed_Medium: AnalysedIndex = i 
+            xlabel = f"Pairs of {descr[MediaIndex]}-{descr[MediaIndex+1]} Stack"           
+        if sec_mode == "Thickness":
+            for i in range(len(descr)):
+                if descr[i] == Chosen_Medium:
+                    MediaIndex = i
+                    counter = counter + 1
+                if main_mode == "E_Field":
+                    if descr[i] == Analysed_Medium: AnalysedIndex = i
+            xlabel = f"Length of {Chosen_Medium} [um]"
         
-        
-                
-                
+        # Adjust ylabel for later plotting
+        if main_mode == "Reflectivity": 
+            ylabel = "Reflectivity"           
+        if main_mode == "E_Field":  
+            ylabel = f"norm. Electric Field in {Analysed_Medium}"
+            n_media = float(n_list[AnalysedIndex].real)
+            print("Refractive Index of analysed Medium:", n_media) 
+            
+        # Stop Computation if Layer is not correctly assigned 
+        assert counter != 0, "WARNING: Layer name not found in given geometry."      
+        assert counter == 1, "WARNING: Layer name is not unique."
+
         while current <= upper: #Iterate over the Parameter range
+            # For each Parameter Value create a Layer-Stack:
             k = 0
             epsilon = []
             thickness = []
-            d_list[MediaIndex] = current
+            if sec_mode == 'Thickness':
+                d_list[MediaIndex] = current
+            if sec_mode == 'Pairs':
+                Pairs[MediaIndex] = int(current)
             while k < (len(Pairs)): #Iterate for each Parameter Value over Geometry List
                 if Pairs[k] != 0:
                     eps, thick = self.Generate_DBR_Stack(n_list[k], n_list[k+1], d_list[k], d_list[k+1], Pairs[k])
@@ -911,35 +1103,95 @@ class ROOT(Tk):
                     epsilon = np.concatenate((epsilon, [n_list[k]**2]))
                     thickness = np.concatenate((thickness, [d_list[k]]))
                 k = k + 1
+            
+            # With the Stack derive the Reflectivity/E-Field of whole structure/in medium
+            if main_mode == 'Reflectivity':
+                # Deribe the Reflectivity of the whole structure
+                t,r,T,R =  self.T_R_Calculation(thickness, epsilon, wavelength, sqrt(epsilon[0]), sqrt(epsilon[-1]))
+                L_list.append(current)
+                R_list.append(R)
+                          
+            if main_mode == 'E_Field': 
+                # Derive the maximum el. Field at chosen Medium
+                E_Field, x, index = self.E_Field_Calculation(thickness, epsilon, wavelength, 5000, Progressbar = False)
                 
-            t,r,T,R =  self.T_R_Calculation(thickness, epsilon, wavelength, 1, 1)
-            #E_Field, x, index = self.E_Field_Calculation(thickness, epsilon, wavelength, 5000)
-            #E = E_Field.real/abs(E_Field.real).max()*index.real.max()
-            R_list.append(R)
-            
-            ind = []
-            ind2 = []
-            #for i in range(len(index)):
-            #    if round(index.real[i], 3) == round(1., 3):
-            #        ind.append(abs(E[i]))
-            #    if round(index.real[i], 2) == round(1.45, 2):
-            #        ind2.append(abs(E[i]))
-            #E_list.append(max(ind))
-            #T_list.append(max(ind2))
-            L_list.append(current)
-            current = current + step
+                # Phase of E_Field is adjusted to show maximum amplitude
+                E = np.real(abs(E_Field))/abs(E_Field).max()*index.real.max()
+                
+                # Use Media Index, find thickness before this medium and of this medium
+                d_below = 0
+                for i in range(len(d_list)):
+                    if i < AnalysedIndex:
+                        if Pairs[i] != 0:   d_below += d_list[i]*Pairs[i]
+                        else: d_below += d_list[i]
+                d_total = d_below + d_list[AnalysedIndex]
+                
+                # Generate a list with all the E_Field values in this medium
+                E_in_Med = []
+                for i in range(len(x)):
+                    if x[i] >= d_below and x[i] <= d_total:
+                        E_in_Med.append(E[i])
+                
+                # There might be a standing wave pattern in Media, make sure to be on anti-node:
+                E_list.append(max(E_in_Med))
+                L_list.append(current)
+
             self.Prog_RvsP["value"] = 100*(current-lower)/(upper-lower)
+            current = current + step
             self.frame_Sim.update_idletasks()
-            
-
-        print("\n***** Computation Complete *****")
-        #self.matplotCanvas(self.frame_ShowSim, [L_list, L_list], [T_list, E_list], xlabel = f"Length of {Chosen_Medium} [um]", ylabel = "Reflectivity")
-        self.matplotCanvas(self.frame_ShowSim, L_list, R_list, xlabel = f"Length of {Chosen_Medium} [um]", ylabel = "Reflectivity")
-
-        print("Reflection Minimum at: ", L_list[R_list.index(min(R_list))])
-        return min(R_list) 
+         
+        if main_mode == 'E_Field':
+            print("\n***** Computation Complete *****")
+            self.matplotCanvas(self.frame_ShowSim, L_list, E_list, xlabel = xlabel, ylabel = ylabel, figsize = (4.8, 3))
+            print("El Field Maximum of Medium'", Analysed_Medium, "' at Parameter Value '", L_list[E_list.index(max(E_list))], "' of Medium", descr[MediaIndex] )
+            print("El Field Minimum of Medium'", Analysed_Medium, "' at Parameter Value '", L_list[E_list.index(min(E_list))], "' of Medium", descr[MediaIndex] )
+        
+        if main_mode == 'Reflectivity':
+            print("\n***** Computation Complete *****")
+            self.matplotCanvas(self.frame_ShowSim, L_list, R_list, xlabel = xlabel, ylabel = ylabel)
+            print("Reflection Maximum at: ", L_list[R_list.index(max(R_list))])
+            print("Reflection Minimum at: ", L_list[R_list.index(min(R_list))])
     
     # Helper Functions:
+    def E_max_selected(self, index, value, op):
+        '''
+        Part of Compute RvsParameter:
+        If 'E_Field' mode is selected the user can select a Layer where the El. Field
+        should be calculated.
+        '''
+        mode = self.mode_Eval.get()
+        if mode == "E_Field":    
+            # Set up window and position it
+            x = root.winfo_x()
+            y = root.winfo_y()
+            win = Toplevel()
+            win.geometry("%dx%d+%d+%d" % (230, 30, x + 165, y + 535))
+            win.title("Layer where E Field is computed:")
+            win.attributes("-toolwindow", True)
+
+            # Create Combobox of Layers
+            wavel = float(self.entry_wlCentre.get())*1000
+            desc_list, r_index_list, n_list, t_list, is_stack  = self.Get_GeometryData(wavel)
+            material_list = desc_list
+            var_Mat = StringVar()
+            mode_Mat  = ttk.Combobox(win, textvariable= var_Mat, values= material_list, width = 15)
+            mode_Mat.grid(row = 1, column = 0, pady = 5, padx = 5, columnspan= 1)
+            mode_Mat.current(0)
+
+            def UpdateThenDestroy():
+                self.Analysed_Medium = var_Mat.get()
+                win.destroy()
+
+            okButt = Button(win, text = "Apply")
+            okButt.bind("<Button-1>", lambda e: UpdateThenDestroy())
+            okButt.grid(row = 1, column = 1, pady = 3, padx = 5)
+
+            canButt = Button(win, text = "Cancel")
+            canButt.bind("<Button-1>", lambda c: win.destroy())
+            canButt.grid(row = 1, column = 2, pady = 3, padx = 5)
+        else:
+            pass
+    
     def Generate_Eps_Th(self, wavelength):
         desc_list, r_index_list, n_list, d_list, Pairs = self.Get_GeometryData(wavelength * 1000) # Wavelength in nm
         k = 0
@@ -965,7 +1217,11 @@ class ROOT(Tk):
             win.destroy()
         
         # Set up PopUp-Window:
+        # Set up window and position it
+        x = root.winfo_x()
+        y = root.winfo_y()
         win = Toplevel()
+        win.geometry("%dx%d+%d+%d" % (300, 60, x + 200, y + 535))
         win.title("Insert Parameter Range")
         win.attributes("-toolwindow", True)
         
@@ -1072,9 +1328,15 @@ class ROOT(Tk):
     
     def is_custom(self, index, value, op):
         if self.var_stack.get() == 'Custom':
-            self.entry_custom = Entry(self.frame0, width = 15, highlightbackground="grey", highlightthickness= 1)
-            self.entry_custom.grid(row = 4, column = 3)
+            dummyframe = Frame(self.frame0)
+            dummyframe.grid(row = 4, column= 3)
+            self.entry_custom = Entry(dummyframe, width = 7, highlightbackground="grey", highlightthickness= 1)
+            self.entry_custom.grid(row = 0, column = 0, padx = 1)
             self.entry_custom.insert(END, 1.0)
+            self.entry_custom2 = Entry(dummyframe, width = 7, highlightbackground="grey", highlightthickness= 1)
+            self.entry_custom2.grid(row = 0, column = 1, padx = 1)
+            self.entry_custom2.insert(END, 1.0)
+
         if self.var_stack.get() != 'Custom':
             self.entry_custom.destroy()
             
@@ -1222,7 +1484,7 @@ class ROOT(Tk):
 
         return t, r, T, R
     
-    def E_Field_Calculation(self, thickness, epsilon, wavelength, Precision):
+    def E_Field_Calculation(self, thickness, epsilon, wavelength, Precision, Progressbar = True):
         '''
         Calculation of the Electric Field strengh at different layers.
         
@@ -1245,8 +1507,8 @@ class ROOT(Tk):
         index   : 1D-array, Spatial Distribution of refractive indicees
         '''
         # Input layer for x < 0; output layer for x > 0; illumination from the input layer side
-        epsilon_in = 1
-        epsilon_out = 1
+        epsilon_in = epsilon[0]
+        epsilon_out = epsilon[-1]
 
         # extension of the vectors epsilon and thickness to take the input and
         # output layer into account
@@ -1321,8 +1583,11 @@ class ROOT(Tk):
             if 1e-48 >= M.max().real >= 1e48 or 1e-48 >= M.max().imag >= 1e48:
                 print("WARNING: MATRIX CALCULATION FAILED !!! NUMERICAL ERROR DUE TO ONE MATERIAL BEING TOO THICK.")
             #print(f"Calculating E-Field Distribution ... ({round(100*xi/np.sum(thickness),1)})%", end = '\r')
-            self.Prog_E["value"] = 100*(i/len(x))
-            self.frame_Sim.update_idletasks()
+            if Progressbar == True:
+                self.Prog_E["value"] = 100*(i/len(x))
+                self.frame_Sim.update_idletasks()
+            if Progressbar == False:
+                pass
         # First Entry in 'E_Field' is the Amplitude at the end of Stack: Flip Arrays!
         E_Field = E_Field[::-1]
         index = index[::-1]
@@ -1349,8 +1614,8 @@ class ROOT(Tk):
 
         if ylower != None:
             ax.set_ylim(ylower, yupper)
-        ax.set_xlabel(xlabel, fontsize = 12)
-        ax.set_ylabel(ylabel, fontsize = 12)
+        ax.set_xlabel(xlabel, fontsize = 10)
+        ax.set_ylabel(ylabel, fontsize = 10)
         #self.a.set_title("Reflection of p-polarized light with Surface Plasmon Resonance", fontsize = 8)
         if grid == True:
             ax.grid()
