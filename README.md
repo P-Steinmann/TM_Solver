@@ -5,6 +5,7 @@ author: Paul Steinmann <p.steinmann@uni-bonn.de>
 Started : 10.01.2022
 Released: 28.01.2022
 Version: 1.0
+
     Version Added: 1.0.1
         Changed Gui style to ttks 'clam'
         Changed Style of the Progressbar
