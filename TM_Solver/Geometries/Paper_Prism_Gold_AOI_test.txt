@@ -1,0 +1,4 @@
+Medium1	BK7	5.0	0
+Medium2	Chrom	0.005	0
+Medium3	Gold	0.03	0
+Medium4	Air	5.0	0
