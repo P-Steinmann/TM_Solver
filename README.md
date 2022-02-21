@@ -23,24 +23,105 @@ author: Paul Steinmann <p.steinmann@uni-bonn.de>
             Hot Fix: Resulting from above: Geometries can be loaded properly again
             Hot Fix: E_Field in Animation and in static are comparable and correct (hopefully)
         
+        Version Added: 1.0.4
+            Hot Fix: Reflectivity was computed starting from Vacuum, giving slightly wrong values, this was adjusted
+            Final Fixes for E_Field/ E_Field animation (this time really, i hope)
+            Added assertion errors in 'RvsParameter'
+            Worked on RvsParameter... Soon there might be E_Field available ! Needs: Compute EMax in Layer... vs Thickness/Pairs of Layer ...
+                Maybe if mode "E_Max" is selected then open up window where one can chose a medium
+        
+        Version Added: 1.0.5
+            Plot labels for 'RvsParameter' adjusted
+            Added in 'Add Layerstack' individual custom thicknesses
+            Added some docstrings and smoothed some function
+        
+        Version Added: 1.0.6
+            Changed the order of last row in Simulation Settings
+            Added label 'of' in last row in Simulation Settings
+            Beta Version of: Compute E_Field (in Material) vs "Thickness/Pairs" of Medium is done !
+            Adjusted sample Geometries a little bit... Version 1.1 can come soon !!!
+        
+        Version Added: 1.0.7 -> New Version: 1.1.0
+            Hot Fix: Corrected MgF2 refr. index, added absorbance of material
+            RvsParameter now prints maximum and minimum
+            Added some docstrings
+            RvsParameter looks a little better...
+            Combobox for RvsParameter functionalities added with automatic adjustment !
+            Repositioned Set Range Top window
+    
+    Version: 1.1 08.02.2022
+
+        Version Added: 1.1.1
+            Repositioned "OnDoubleClick" window, added combobox
+            Added options to enter AOI in Simulation Settings Frame
+            Added automatic name adjustment if layername already exists
+    
+        Version Added: 1.1.2 -> New Version: 1.2.0
+            Added Full AOI and Polarisation Mode Functionality !
+            Tested with results from: https://www.jstage.jst.go.jp/article/matertrans/51/6/51_M2010003/_pdf/-char/en
+            Added 'read only to all comboboxes
+            
+    Version: 1.2 10.02.2022
+
+        Version Added: 1.2.1
+            Improved Material functions for SiO2 and Si3N4, Added source
+            Fixed an error in the GetDBRStack function
+        
+        Version Added: 1.2.2 -> New Version: 1.3.0
+            Added functional "Reflectivity vs Wavelength vs LayerPairs" option
+            Some adjustments to the plotting function were made
+
+    Version: 1.3 12.02.2022
+
+        Version Added: 1.3.1
+            Added MaterialToList function
+            Added Button "Add New Material To List" allowing own custom materials
+            Added the window helper function
+            Added some docstrings
+        
+        Version Added: 1.3.2 -> 1.4
+            Changed Name "E_max_selected" to "EorN_selected"
+            Added "n+ik" to Compute combobox
+            Made some adjustments to RVsParameter -> n+ik is functional !
+    
+    Version: 1.4 19.02.2022
+        
+        Version Added: 1.4.1
+            Added Docstring to every function
+            Improved some function Designs
+            Hot Fix for OnDoubleClick Function
+
     Progress until V2:
-        Main Tasks:
-            Is Problem?: Wave in last material osc., which changes the physics if length is changed.
             
         Possible Upgrades:
-            Add Function Docstrings EVERYWHERE !!!
-            Add: Pairs Option !
+            #'Compute R/E (in material) vs thickness/pairs of material' Clean up !
+            #Add: Pairs Option !
             #make 'get data' into a helper function
             #layerStack: Thickness can be l/4, l/8, l/2, l, custom ?
             #Improve Design
-            Coloriezed Plots
-            Compute R vs lamba vs layerpairs ? / R vs layerpairs
+            # / R vs layerpairs
             #Add More Materials
+            #Add Combobox for RvsParameter functionalities!
+            #on Double Click: topwindow position, material combobox !
+            #if "Description" of material already exists add a number !
+            #Compute E_MAX vs Parameter, E_MAX at Position
+            #Angle of Incidence ?
+            #read only comboboxes !
+            #Add mode: Compute R vs: wavelength/AOI
+            #polarisation mode
+            #Compute R vs lamba vs layerpairs ?
+            #Add Custom refr. index
+            #Add Function Docstrings EVERYWHERE !!!
+            #Add Option: Compute 'refractive index (n,k)' vs 'wavelength' of 'material'
+            #Improve: OnDouble Click function !
+
+            Adjust n+ik vs wavelength prints of material range excesission
+            Allow saving and loading of custom materials
+            Allow saving and loading of Geometries with custom materials
+            Coloriezed Plots
             Ask for feedback     
-            Angle of Incidence ?
             Add feedback/terminal window in programm (Nothing selected, errors, comp time, etc...)
             Improve speed of: Refl vs Wavelength; And: Dont allow button inputs while running
-            if "Description" of material already exists add a number !
-            Improve: OnDouble Click function !
-            Compute E_MAX vs Parameter, E_MAX at Position
+            Multi-Processing ?
             iF interpol range is reached, plot until this values and update range max
+            Changable speed of animation
