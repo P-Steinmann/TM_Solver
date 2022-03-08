@@ -1,0 +1,5 @@
+MediumIn	Air	1.0	0
+Layer1	SiO2	wavelength/4	5
+Layer2	Si3N4	wavelength/4	10
+Substrate	BK7	1.0	0
+MediumOut	Air	1.0	0

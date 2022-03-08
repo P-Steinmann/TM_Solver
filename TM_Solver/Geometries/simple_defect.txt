@@ -1,0 +1,7 @@
+In	Air	1.0	0
+Layer1	SiO2	wavelength/4	5
+Layer2	Si3N4	wavelength/4	5
+Defect	SiO2	0.1327	0
+Layer3	SiO2	wavelength/4	5
+Layer4	Si3N4	wavelength/4	5
+Out	Air	1.0	0
