@@ -1,0 +1,4 @@
+CavityGap	Air	1.896	0
+FibreMirror	Gold	0.039	0
+Adhesion	Chrom	0.003	0
+Fibre	FusedSilica	5.0	0

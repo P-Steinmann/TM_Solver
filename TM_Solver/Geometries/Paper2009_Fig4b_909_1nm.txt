@@ -1,0 +1,5 @@
+In	Air	1.0	0
+M1	Gold	0.03	0
+Cavity	SiO2	0.56	0
+M2	Gold	0.2	0
+Sub	Air	1.0	0
